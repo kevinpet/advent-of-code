@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -47,26 +48,24 @@ public class Advent7 {
 
   static int runPermutation(int[] phaseSettings, int[] program) {
     Program a = new Program(program);
-    a.run(phaseSettings[0], 0);
-    a.run();
-    int outA = a.outputs.poll();
-
+    a.run(phaseSettings[0]);
     Program b = new Program(program);
-    b.run(phaseSettings[1], outA);
-    b.run();
-    int outB = b.outputs.poll();
-
+    b.run(phaseSettings[1]);
     Program c = new Program(program);
-    c.run(phaseSettings[2], outB);
-    c.run();
-    int outC = c.outputs.poll();
-
+    c.run(phaseSettings[2]);
     Program d = new Program(program);
-    d.run(phaseSettings[3], outC);
-    int outD = d.outputs.poll();
-
+    d.run(phaseSettings[3]);
     Program e = new Program(program);
-    e.run(phaseSettings[4], outD);
+    e.run(phaseSettings[4]);
+
+    do {
+      a.run(0);
+      b.run(a.outputs);
+      c.run(b.outputs);
+      d.run(c.outputs);
+      e.run(d.outputs);
+    } while (!e.halted);
+
     int outE = e.outputs.poll();
     return outE;
   }
@@ -95,7 +94,11 @@ public class Advent7 {
     }
 
     void run(Integer... newInputs) {
-      inputs.addAll(Arrays.asList(newInputs));
+      run(Arrays.asList(newInputs));
+    }
+
+    void run(Collection<Integer> newInputs) {
+      inputs.addAll(newInputs);
       while (true) {
         int opCode = p[i] % 100;
         boolean imm1 = (p[i] / 100) % 10 > 0;
