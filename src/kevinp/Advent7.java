@@ -3,6 +3,7 @@ package kevinp;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,7 +19,7 @@ public class Advent7 {
         Arrays.stream(lines.iterator().next().split(","))
             .mapToInt(Integer::parseInt)
             .toArray();
-    System.out.println(findBestPermuation(original));
+    System.out.println(findBestPermuation59(original));
   }
 
   static String findBestPermuation(int[] program) {
@@ -46,6 +47,31 @@ public class Advent7 {
     return String.format("%d given by %s", max, best);
   }
 
+  static String findBestPermuation59(int[] program) {
+    int max = 0;
+    String best = "";
+    for (int a = 5; a < 10; a++) {
+      for (int b = 5; b < 10; b++) {
+        if (b == a) continue;
+        for (int c = 5; c < 10; c++) {
+          if (c == b || c == a) continue;
+          for (int d = 5; d < 10; d++) {
+            if (d == c || d == b || d == a) continue;
+            for (int e = 5; e < 10; e++) {
+              if (e == d || e == c || e == b || e == a) continue;
+              int output = runPermutation(new int[] { a, b, c, d, e }, program);
+              if (output > max) {
+                max = output;
+                best = String.format("%d %d %d %d %d", a, b, c, d, e);
+              }
+            }
+          }
+        }
+      }
+    }
+    return String.format("%d given by %s", max, best);
+  }
+
   static int runPermutation(int[] phaseSettings, int[] program) {
     Program a = new Program(program);
     a.run(phaseSettings[0]);
@@ -58,16 +84,40 @@ public class Advent7 {
     Program e = new Program(program);
     e.run(phaseSettings[4]);
 
-    do {
-      a.run(0);
-      b.run(a.outputs);
-      c.run(b.outputs);
-      d.run(c.outputs);
-      e.run(d.outputs);
-    } while (!e.halted);
+    int lastOutput = 0;
+    a.run(0);
+    b.run(pollAll(a.outputs));
+    c.run(pollAll(b.outputs));
+    d.run(pollAll(c.outputs));
+    e.run(pollAll(d.outputs));
+    while(!e.halted) {
+      a.run(pollAll(e.outputs));
+      b.run(pollAll(a.outputs));
+      c.run(pollAll(b.outputs));
+      d.run(pollAll(c.outputs));
+      e.run(pollAll(d.outputs));
+      for (int out : e.outputs) {
+        lastOutput = out;
+      }
+      System.out.println("a: " + a);
+      System.out.println("b: " + b);
+      System.out.println("c: " + c);
+      System.out.println("d: " + d);
+      System.out.println("e: " + e);
+      System.out.println();
+    }
+    for (int out : e.outputs) {
+      lastOutput = out;
+    }
+    return lastOutput;
+  }
 
-    int outE = e.outputs.poll();
-    return outE;
+  private static Collection<Integer> pollAll(Queue<Integer> outputs) {
+    List<Integer> list = new ArrayList<>();
+    while (outputs.peek() != null) {
+      list.add(outputs.poll());
+    }
+    return list;
   }
 
   static String run(int input, String program) {
@@ -115,6 +165,7 @@ public class Advent7 {
             break;
           case 3: // input
             if (inputs.peek() == null) {
+              System.err.println("blocking for input");
               return;
             }
             p[p[i + 1]] = inputs.poll();
@@ -123,7 +174,7 @@ public class Advent7 {
           case 4: // output
             outputs.add(v(1, imm1, i, p));
             i += 2;
-            System.out.println(this);
+//            System.out.println(this);
             return;
           case 5: // jump if true
             if (v(1, imm1, i, p) != 0) {
