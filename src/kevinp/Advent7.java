@@ -111,6 +111,9 @@ public class Advent7 {
             i += 4;
             break;
           case 3: // input
+            if (inputs.peek() == null) {
+              return;
+            }
             p[p[i + 1]] = inputs.poll();
             i += 2;
             break;
