@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 public class Advent7 {
 
@@ -48,25 +49,25 @@ public class Advent7 {
     Program a = new Program(program);
     a.run(phaseSettings[0], 0);
     a.run();
-    int outA = a.lastOutput;
+    int outA = a.outputs.poll();
 
     Program b = new Program(program);
     b.run(phaseSettings[1], outA);
     b.run();
-    int outB = b.lastOutput;
+    int outB = b.outputs.poll();
 
     Program c = new Program(program);
     c.run(phaseSettings[2], outB);
     c.run();
-    int outC = c.lastOutput;
+    int outC = c.outputs.poll();
 
     Program d = new Program(program);
     d.run(phaseSettings[3], outC);
-    int outD = d.lastOutput;
+    int outD = d.outputs.poll();
 
     Program e = new Program(program);
-    d.run(phaseSettings[4], outD);
-    int outE = e.lastOutput;
+    e.run(phaseSettings[4], outD);
+    int outE = e.outputs.poll();
     return outE;
   }
 
@@ -81,29 +82,25 @@ public class Advent7 {
     int i = 0;
     boolean halted = false;
     Queue<Integer> inputs = new LinkedList<>();
-    int lastOutput = 0;
+    Queue<Integer> outputs = new LinkedList<>();
     Program(int[] mem) {
       this.p = mem.clone();
     }
 
-    int runToCompletion() {
+    String runToCompletion() {
       while (!halted) {
         run();
       }
-      return lastOutput;
+      return outputs.stream().map(i -> Integer.toString(i)).collect(Collectors.joining());
     }
 
     void run(Integer... newInputs) {
       inputs.addAll(Arrays.asList(newInputs));
-      int nextInput = 0;
-      int lastOutput = 0;
-      int i = 0;
       while (true) {
         int opCode = p[i] % 100;
         boolean imm1 = (p[i] / 100) % 10 > 0;
         boolean imm2 = (p[i] / 1000) % 10 > 0;
         boolean imm3 = (p[i] / 10000) % 10 > 0;
-//        outputWithPointer(i, p);
         switch (opCode) {
           case 1: // add
             p[p[i + 3]] = (imm1 ? p[i + 1] : p[p[i + 1]]) + (imm2 ? p[i + 2] : p[p[i + 2]]);
@@ -118,8 +115,9 @@ public class Advent7 {
             i += 2;
             break;
           case 4: // output
-            lastOutput = v(1, imm1, i, p);
+            outputs.add(v(1, imm1, i, p));
             i += 2;
+            System.out.println(this);
             return;
           case 5: // jump if true
             if (v(1, imm1, i, p) != 0) {
@@ -160,21 +158,8 @@ public class Advent7 {
       }
     }
 
-  }
-
-  static String run(int input, int[] p) {
-    Program program = new Program(p);
-    program.run(input);
-    program.runToCompletion();
-    return Integer.toString(program.lastOutput);
-  }
-
-  private static int v(int arg, boolean immediate, int i, int[] p) {
-    return immediate ? p[i + arg] : p[p[i + arg]];
-  }
-
-  private static void outputWithPointer(int i, int[] p) {
-      StringBuilder sb = new StringBuilder();
+    public String toString() {
+      StringBuilder sb = new StringBuilder("state: ");
       for (int j = 0; j < p.length; j++) {
         if (i == j) {
           sb.append(">");
@@ -184,9 +169,25 @@ public class Advent7 {
           sb.append("<");
         }
         sb.append(",");
+      }
+      sb.append("\nremaining inputs: ").append(inputs);
+      sb.append("\noutput: ").append(outputs);
+      return sb.toString();
     }
-    System.out.println(sb);
+
   }
+
+  static String run(int input, int[] p) {
+    Program program = new Program(p);
+    program.run(input);
+    program.runToCompletion();
+    return program.outputs.stream().map(i -> Integer.toString(i)).collect(Collectors.joining());
+  }
+
+  private static int v(int arg, boolean immediate, int i, int[] p) {
+    return immediate ? p[i + arg] : p[p[i + arg]];
+  }
+
   //      }
 //    }
 }
