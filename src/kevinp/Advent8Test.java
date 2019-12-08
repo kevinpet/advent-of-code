@@ -56,4 +56,28 @@ public class Advent8Test {
     assertEquals(2, Advent8.onesByTwos(data, 1));
     assertEquals(6, Advent8.onesByTwos(data, 2));
   }
+
+  @Test
+  public void testTopVisible() {
+    int[][][] data = {
+        {
+            {2, 2, 9},
+            {1, 2, 2}
+        },
+        {
+            {1, 2, 3},
+            {4, 5, 6}
+        },
+        {
+            {7, 0, 9},
+            {0, 1, 2}
+        }
+    };
+    int[][] expected = {
+        { 1, 0, 9 },
+        { 1, 5, 6}
+    };
+    assertArrayEquals(expected, Advent8.merge(data));
+  }
+
 }

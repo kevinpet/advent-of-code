@@ -3,12 +3,17 @@ package kevinp;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 public class Advent8 {
   public static void main(String[] args) throws IOException {
-    int[][][] data = loadLayers(25, 6, Files.readAllLines(Path.of("advent8.txt")).get(0));
+    int[][][] data = loadLayers(25, 6, Files.readString(Path.of("advent8.txt")));
     var layer = fewestZeros(data);
     System.out.println(onesByTwos(data, layer));
+    Arrays.stream(merge(data)).forEach(row -> {
+      Arrays.stream(row).forEach(e -> System.out.print(e == 1 ? "#" : " "));
+      System.out.println();
+    });
   }
 
   public static int[][][] loadLayers(int width, int height, String data) {
@@ -62,4 +67,21 @@ public class Advent8 {
       }
     return ones * twos;
   }
+
+  public static int[][] merge(int[][][] data) {
+    int[][] merged = new int[data[0].length][];
+    for (int row = 0; row < merged.length; row++) {
+      merged[row] = new int[data[0][0].length];
+      for (int column = 0; column < merged[row].length; column++) {
+        for (int layer = 0; layer < data.length; layer++) {
+          if (data[layer][row][column] != 2) {
+            merged[row][column] = data[layer][row][column];
+            break;
+          }
+        }
+      }
+    }
+    return merged;
+  }
+
 }
